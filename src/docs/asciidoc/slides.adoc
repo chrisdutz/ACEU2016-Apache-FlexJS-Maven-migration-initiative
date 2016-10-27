@@ -1,163 +1,189 @@
-= Example Manual
-Doc Writer <doc.writer@example.org>
-2014-09-09
-:revnumber: {project-version}
+= Apache FlexJS Maven migration initiative
+
+Christofer Dutz <christofer.dutz@codecentric.de>
+
+ApacheConEU 2016 - Seville - 2016-11-18
+
 :example-caption!:
 ifndef::imagesdir[:imagesdir: images]
 ifndef::sourcedir[:sourcedir: ../../main/java]
 
-== Introduction
+== Who am I?
+
+image::christofer-dutz.png[float=right]
+
+* Christofer Dutz
+* Senior IT Consultant
+* codecentric AG
+* Apache Member
+* Apache Flex Committer & PMC
+* Flexmojos Lead Developer
+* Open-Source enthusiast
+
+== Agenda
 
 [%step]
-* This is a user manual for an example project.
-* This project does something.
-* We just haven't decided what that is yet.
-
-== Speaker Notes
-
-Press the `*s*` key to access speaker notes.
+* Developing FlexJS in 2015
+* Why migrate to Maven
+* Migration strategy
+* Developing FlexJS in 2016
+* `flexjs-maven-plugin`
+* Ongoing migrations
 
 [NOTE.speaker]
 --
-You've unlocked the super secret notes area.
-Neat huh?
+* why maven: Why migrate at all and why migrate to Maven and not Gradle
 --
 
-== Blank screen
+== Developing FlexJS in 2015
 
-You can press `*b*` or `*.*` to blank your current screen.
+* Building with Ant only
+* Building FlexJS required
+** Cloning 2 GIT repositories
+** Manually installing multiple tools
+** Setting several environment variables (x > 6)
+** Requires a strict directory structure of all projects
 
-Hit it again to bring it back.
+-> Only a hand full of developers working on FlexJS
 
-== Overview
+[NOTE.speaker]
+--
+* no validation of settings: failures during the build with little help in finding out what's wrong
+* directory structure: Ant scripts reference other projects based on relative paths
+--
 
-Press the `*esc*` key to get an overview of your slides.
+== Developing FlexJS in 2015
 
-== Attributes
+* Problems with the build
+** Relies on direct downloads
+** Dependencies not verified
+** Build scripts quite hard to understand
+** Circular dependencies
+* CI feedback takes several hours
 
-Press the down arrow key to see the next sub-slide.
+-> Frustrates people working on FlexJS
 
-=== Attributes Part 1
-.Built-in
-asciidoctor-version:: {asciidoctor-version}
-safe-mode-name:: {safe-mode-name}
-docdir:: {docdir}
-docfile:: {docfile}
-imagesdir:: {imagesdir}
+[NOTE.speaker]
+--
+* downloads: url changes, site outages, ...
+* verification: file validated during download, but not when using previously downloaded jar -> need to delete all dependencies quite often
+* circular dependencies: flex-sdk and flexjs-framework needed for tests of compiler, compiler needed to compile framework
+* ci-feedback: External Jenkins, slow, doesn't build examples (No cross-compiler tests in the CI)
+--
 
-=== Attributes Part 2
-.Custom
-project-version:: {project-version}
-sourcedir:: {sourcedir}
+== Why migrate to Maven?
 
-== Including documents from subdir
+* WHY MIGRATE to Maven?
+** Simplify the project
+** Simplify the build process
+** Make the build process more robust
+** Get more people involved
 
-.include::subdir/_b.adoc[]
+== Why migrate to Maven?
 
-include::subdir/_b.adoc[]
+* Why migrate TO MAVEN?
+** Maven makes it hard to be sloppy
+** Helps volunteers to get started
+** Repo-System makes the build robust
 
-== Images
+[NOTE.speaker]
+--
+* hard to be sloppy: Gradle allows the same sloppiness as Ant,
+** open-source requires volunteers,
+** volunteers aren't all build specialists,
+** we can't force volunteers not to be sloppy
+** (but makes it harder for inexperienced volunteers to contribute to the build)
+* getting started: default build makes it easy to get started
+--
 
-[.thumb]
-image::logo-and-name-white.png[scaledwidth=75%]
+== Migration strategy
 
-== Videos
+* Update the directory structure
+* Find cycles in the build
+* Refactor to eliminate cycles
+** Extract code-generators into custom maven plugins
+** Extract dependencies of code-generators into modules
+** Refactor tests not to rely on cycles
+** Split up into 3 repositories
+* Get third party libraries mavenized
 
-Play videos from Youtube, or locally
+[NOTE.speaker]
+--
+* build-helpers: code generators, code manipulators
+* 3 repos:
+** compiler, typedefs, framework
+*** In general typedefs and framework could be merged, but should be released separately
+** Compiler contained code compiled by compiler (now in typedefs repo)
+* 3rd party libs: Became committer of JBurg, did Maven release of JBurg
+* 3rd party libs: Integrated the Apache Flex Maven Converter for Flex SDK, Flash, Air and Font-Kit dependencies
+--
 
-video::BKorP55Aqvg[youtube, width=640, height=480]
+== Migration strategy
 
-== Lists
+video::167857327[vimeo, width=640, height=480]
 
-Asciidoctor allows a wide variety of list option.
+https://vimeo.com/167857327/da3e3239bc
 
-For details see the documentation starting at: http://asciidoctor.org/docs/user-manual/#unordered-lists
+[NOTE.speaker]
+--
+* Started writing documentation
+* Created a Maven training video
+--
 
-Press the down arrow key to see the some examples.
+== Developing FlexJS in 2016
 
-=== Unordered List
-
-* Protons
-* Electrons
-* Neutrons
-
-=== Ordered List
-
-. Protons
-. Electrons
-. Neutrons
-
-=== Nested List
-
-Nest lists, by duplicating the list-char
-
-* Protons
-** Electrons
-* Neutrons
-
-== Tables
-
-[cols="2*", options="header"]
-|===
-| Header A | Header B
-| Cell A1 | Cell B1
-| Cell A2 | Cell B2
-| Cell A3 | Cell B3
-|===
-
-== Source Code
-
-[source,java]
-.Java code from project
+* Set one environment variable
+* Checkout 3 repositories
+* Run the following on each of them
 ----
-include::{sourcedir}/example/StringUtils.java[tags=contains,indent=0]
+    mvn -s settings-template.xml clean install
 ----
 
-== Diagrams
+[NOTE.speaker]
+--
+environment-variable: Optional, only needed for running tests
+build: settings-template only needed till we release the converter.
+--
 
-Press the down arrow key to see the different types of diagrams
+== Developing FlexJS in 2016
 
-=== Ditaa Diagram
+* CI feedback in about 30 minutes
 
-[ditaa,asciidoctor-diagram-process]
-....
-                   +-------------+
-                   | Asciidoctor |-------+
-                   |   diagram   |       |
-                   +-------------+       | PNG out
-                       ^                 |
-                       | ditaa in        |
-                       |                 v
- +--------+   +--------+----+    /---------------\
- |        |---+ Asciidoctor +--->|               |
- |  Text  |   +-------------+    |   Beautiful   |
- |Document|   |   !magic!   |    |    Output     |
- |     {d}|   |             |    |               |
- +---+----+   +-------------+    \---------------/
-     :                                   ^
-     |          Lots of work             |
-     +-----------------------------------+
-....
+image::ci-feedback.png[scaledwidth=75%]
 
-=== PlantUML Diagram
+== Developing FlexJS in 2016
 
-[plantuml,auth-protocol]
-....
-Alice -> Bob: Authentication Request
-Bob --> Alice: Authentication Response
+* Jenkins Multibranch Pipeline build
 
-Alice -> Bob: Another authentication Request
-Alice <-- Bob: another authentication Response
-....
+image::multibranch-pipeline-1.png[scaledwidth=75%]
 
-=== GraphVIZ Diagram
+image::multibranch-pipeline-2.png[scaledwidth=75%]
 
-[graphviz, dot-example, svg]
-----
-digraph g {
-    a -> b
-    b -> c
-    c -> d
-    d -> a
-}
-----
+== Developing FlexJS in 2016
+
+* Automatic Site generation
+
+image::site-generation.png[scaledwidth=75%]
+
+== Developing FlexJS in 2016
+
+* Static code analysis using SonarQube
+
+image::sonar-qube.png[scaledwidth=75%]
+
+[NOTE.speaker]
+--
+ci-feedback: CI Jobs build everything including distribution and examples
+multi-branch: Jenkins automatically builds `develop` as well as `feature-autobuild/*` branches
+sonar-qube: Currently still requiring external Sonar Qube until ASF updated to new version
+--
+
+== `flexjs-maven-plugin`
+
+
+== Ongoing migrations
+
+* Website generated with `maven-site-plugin`
+* Automatic download of Flashplayer-Debugger in the converter (requires implementing code to unpack dmg files)
+* Release the flex-sdk-converter
+* Extend the flexjs-maven-plugin to support unit-testing
